@@ -13,10 +13,27 @@ public class ApplicationDbContext : IdentityDbContext<User>
     }
 
     private DbSet<User> Users { get; set;}
+    private DbSet<Course> Courses { get; set;}
+    private DbSet<UserCourse> UserCourses { get; set; }
+
+    
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        
+        modelBuilder.Entity<UserCourse>()
+            .HasKey(uc => new { uc.UserId, uc.CourseId });
+
+        modelBuilder.Entity<UserCourse>()
+            .HasOne(uc => uc.User)
+            .WithMany(u => u.UserCourses)
+            .HasForeignKey(uc => uc.UserId);
+
+        modelBuilder.Entity<UserCourse>()
+            .HasOne(uc => uc.Course)
+            .WithMany(c => c.UserCourses)
+            .HasForeignKey(uc => uc.CourseId);
         
         List<IdentityRole> roles = new List<IdentityRole>
         {
