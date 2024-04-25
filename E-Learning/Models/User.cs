@@ -10,4 +10,5 @@ public class User : IdentityUser
     public string Area { get; set; }
     
     public List<UserCourse> UserCourses { get; set; }
+    public Cart Cart { get; set; }
 }

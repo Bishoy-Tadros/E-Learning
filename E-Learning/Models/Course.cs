@@ -13,4 +13,5 @@ public class Course
     public string Category { get; set; }
     
     public List<UserCourse> UserCourses { get; set; }
+    public List<CartCourse> CartCourses { get; set; }
 }
