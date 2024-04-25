@@ -3,7 +3,7 @@
 public class Cart
 {
     public string CartId { get; set; } = Guid.NewGuid().ToString();
-    public string UserId { get; set; }
-    public User User { get; set; }
+    public string CustomerId { get; set; }
+    public Customer Customer { get; set; }
     public List<CartCourse> CartCourses { get; set; }
 }

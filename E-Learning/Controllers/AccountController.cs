@@ -28,27 +28,37 @@ public class AccountController : ControllerBase
     [HttpPost("register/{userRole}")]
     public async Task<IActionResult> Register(RegisterDTO registerDto, string userRole)
     {
+        var user = new User();
+
         if (userRole.ToLower() == "user")
         {
             userRole = "User";
+            user = new Customer
+            {
+                UserName = registerDto.Username,
+                Email = registerDto.Email,
+                Address = registerDto.Address,
+                Area = registerDto.Area,
+                PhoneNumber = registerDto.PhoneNumber
+            };
         }
         else if (userRole.ToLower() == "admin")
         {
             userRole = "Admin";
+            user = new User
+            {
+                UserName = registerDto.Username,
+                Email = registerDto.Email,
+                Address = registerDto.Address,
+                Area = registerDto.Area,
+                PhoneNumber = registerDto.PhoneNumber
+            };
         }
         else
         {
             return BadRequest("Invalid user role");
         }
 
-        var user = new User
-        {
-            UserName = registerDto.Username,
-            Email = registerDto.Email,
-            Address = registerDto.Address,
-            Area = registerDto.Area,
-            PhoneNumber = registerDto.PhoneNumber
-        };
 
         var result = await _userManager.CreateAsync(user, registerDto.Password);
 
@@ -63,12 +73,12 @@ public class AccountController : ControllerBase
                 var token = _tokenService.CreateToken(user, roles);
 
                 return Ok(new LoginResponseDto
-                {
-                    Id = user.Id,
-                    UserName = user.UserName,
-                    Email = user.Email,
-                    Token = token,
-                }
+                    {
+                        Id = user.Id,
+                        UserName = user.UserName,
+                        Email = user.Email,
+                        Token = token,
+                    }
                 );
             }
         }
@@ -82,7 +92,8 @@ public class AccountController : ControllerBase
     {
         var user = await _userManager.Users.FirstOrDefaultAsync(u => u.UserName == loginDto.Username.ToLower());
         var result =
-            await _signInManager.PasswordSignInAsync(loginDto.Username, loginDto.Password, isPersistent: true, lockoutOnFailure: false);
+            await _signInManager.PasswordSignInAsync(loginDto.Username, loginDto.Password, isPersistent: true,
+                lockoutOnFailure: false);
         var roles = await _userManager.GetRolesAsync(user);
         var token = _tokenService.CreateToken(user, roles);
 
@@ -104,8 +115,15 @@ public class AccountController : ControllerBase
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
+        // Retrieve the token from the request (you can use HttpContext or other methods)
+        var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+        // Invalidate the token (e.g., remove it from the client-side)
+        // You can also revoke the token on the server-side if needed
+
+        // Perform any other cleanup (e.g., sign out the user)
         await _signInManager.SignOutAsync();
-        _httpContextAccessor.HttpContext.Session.Clear();
-        return Ok();
+
+        return Ok("Logged out successfully.");
     }
 }

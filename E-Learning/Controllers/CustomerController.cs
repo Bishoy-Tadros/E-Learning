@@ -12,13 +12,13 @@ namespace E_Learning.Controllers;
 [Authorize(Roles = "User")]
 [Route("api/user")]
 [ApiController]
-public class UserController : ControllerBase
+public class CustomerController : ControllerBase
 {
     private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
     private readonly ApplicationDbContext _dbContext;
 
-    public UserController(UserManager<User> userManager, SignInManager<User> signInManager,
+    public CustomerController(UserManager<User> userManager, SignInManager<User> signInManager,
         ApplicationDbContext applicationDbContext)
     {
         _userManager = userManager;
@@ -44,8 +44,8 @@ public class UserController : ControllerBase
     [HttpPost("addToCart/{courseId}")]
     public async Task<IActionResult> AddToCart(string courseId)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (userId == null)
+        var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (customerId == null)
         {
             return Unauthorized();
         }
@@ -58,13 +58,13 @@ public class UserController : ControllerBase
 
         var cart = await _dbContext.Carts
             .Include(c => c.CartCourses)
-            .FirstOrDefaultAsync(c => c.UserId == userId);
+            .FirstOrDefaultAsync(c => c.CustomerId == customerId);
 
         if (cart == null)
         {
             cart = new Cart
             {
-                UserId = userId,
+                CustomerId = customerId,
                 CartCourses = new List<CartCourse>()
             };
             _dbContext.Carts.Add(cart);
@@ -92,8 +92,8 @@ public class UserController : ControllerBase
     [HttpGet("viewCart")]
     public IActionResult ViewCart()
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (userId == null)
+        var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (customerId == null)
         {
             return Unauthorized();
         }
@@ -101,7 +101,7 @@ public class UserController : ControllerBase
         var cart = _dbContext.Carts
             .Include(c => c.CartCourses)
             .ThenInclude(cc => cc.Course)
-            .FirstOrDefault(c => c.UserId == userId);
+            .FirstOrDefault(c => c.CustomerId == customerId);
 
         if (cart == null)
         {
@@ -129,8 +129,8 @@ public class UserController : ControllerBase
     [HttpDelete("deleteFromCart/{courseId}")]
     public async Task<IActionResult> DeleteFromCart(string courseId)
     {
-        var userId = _userManager.GetUserId(User);
-        var cart = _dbContext.Carts.Include(c => c.CartCourses).FirstOrDefault(c => c.UserId == userId);
+        var customerId = _userManager.GetUserId(User);
+        var cart = _dbContext.Carts.Include(c => c.CartCourses).FirstOrDefault(c => c.CustomerId == customerId);
         var cartCourse = cart.CartCourses.FirstOrDefault(cc => cc.CourseId == courseId);
         if (cartCourse == null)
         {
@@ -146,8 +146,8 @@ public class UserController : ControllerBase
     [HttpPut("updateCart/{courseId}/{quantity}")]
     public async Task<IActionResult> UpdateCart(string courseId, int quantity)
     {
-        var userId = _userManager.GetUserId(User);
-        var cart = _dbContext.Carts.Include(c => c.CartCourses).FirstOrDefault(c => c.UserId == userId);
+        var customerId = _userManager.GetUserId(User);
+        var cart = _dbContext.Carts.Include(c => c.CartCourses).FirstOrDefault(c => c.CustomerId == customerId);
         var cartCourse = cart.CartCourses.FirstOrDefault(cc => cc.CourseId == courseId);
         if (cartCourse == null)
         {

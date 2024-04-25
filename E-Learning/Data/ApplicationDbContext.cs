@@ -13,6 +13,7 @@ public class ApplicationDbContext : IdentityDbContext<User>
     }
 
     public DbSet<User> Users { get; set;}
+    public DbSet<Customer> Customers { get; set;}
     public DbSet<Course> Courses { get; set;}
     public DbSet<UserCourse> UserCourses { get; set; }
     public DbSet<Cart> Carts { get; set; }
@@ -24,12 +25,12 @@ public class ApplicationDbContext : IdentityDbContext<User>
         base.OnModelCreating(modelBuilder);
         
         modelBuilder.Entity<UserCourse>()
-            .HasKey(uc => new { uc.UserId, uc.CourseId });
+            .HasKey(uc => new { uc.CustomerId, uc.CourseId });
 
         modelBuilder.Entity<UserCourse>()
-            .HasOne(uc => uc.User)
+            .HasOne(uc => uc.Customer)
             .WithMany(u => u.UserCourses)
-            .HasForeignKey(uc => uc.UserId);
+            .HasForeignKey(uc => uc.CustomerId);
 
         modelBuilder.Entity<UserCourse>()
             .HasOne(uc => uc.Course)
@@ -50,10 +51,10 @@ public class ApplicationDbContext : IdentityDbContext<User>
             .WithMany(c => c.CartCourses)
             .HasForeignKey(cc => cc.CourseId);
 
-        modelBuilder.Entity<User>()
+        modelBuilder.Entity<Customer>()
             .HasOne(u => u.Cart)
-            .WithOne(c => c.User)
-            .HasForeignKey<Cart>(c => c.UserId);
+            .WithOne(c => c.Customer)
+            .HasForeignKey<Cart>(c => c.CustomerId);
         
         List<IdentityRole> roles = new List<IdentityRole>
         {
