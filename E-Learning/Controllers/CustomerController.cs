@@ -9,8 +9,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace E_Learning.Controllers;
 
-[Authorize(Roles = "User")]
-[Route("api/user")]
+[Authorize(Roles = "Customer")]
+[Route("api/customer")]
 [ApiController]
 public class CustomerController : ControllerBase
 {
@@ -30,7 +30,10 @@ public class CustomerController : ControllerBase
     public async Task<IActionResult> ViewCourse(string courseId)
     {
         var course = await _dbContext.Courses.FindAsync(courseId);
-
+        if (course == null)
+        {
+            return NotFound();
+        }
         var courseDetails = new CourseDTO
         {
             CourseTile = course.CourseTile,
@@ -105,7 +108,13 @@ public class CustomerController : ControllerBase
 
         if (cart == null)
         {
-            return NotFound("Cart not found.");
+            cart = new Cart
+            {
+                CustomerId = customerId,
+                CartCourses = new List<CartCourse>()
+            };
+            _dbContext.Carts.Add(cart);
+            
         }
 
         var cartCoursesDto = cart.CartCourses.Select(cc => new CourseDTO
@@ -130,6 +139,10 @@ public class CustomerController : ControllerBase
     public async Task<IActionResult> DeleteFromCart(string courseId)
     {
         var customerId = _userManager.GetUserId(User);
+        if (customerId == null)
+        {
+            return Unauthorized();
+        }
         var cart = _dbContext.Carts.Include(c => c.CartCourses).FirstOrDefault(c => c.CustomerId == customerId);
         var cartCourse = cart.CartCourses.FirstOrDefault(cc => cc.CourseId == courseId);
         if (cartCourse == null)
@@ -147,13 +160,17 @@ public class CustomerController : ControllerBase
     public async Task<IActionResult> UpdateCart(string courseId, int quantity)
     {
         var customerId = _userManager.GetUserId(User);
+        if (customerId == null)
+        {
+            return Unauthorized();
+        }
         var cart = _dbContext.Carts.Include(c => c.CartCourses).FirstOrDefault(c => c.CustomerId == customerId);
         var cartCourse = cart.CartCourses.FirstOrDefault(cc => cc.CourseId == courseId);
         if (cartCourse == null)
         {
             return NotFound();
         }
-
+        
         _dbContext.CartCourses.Update(cartCourse);
         await _dbContext.SaveChangesAsync();
 

@@ -29,10 +29,10 @@ public class AccountController : ControllerBase
     public async Task<IActionResult> Register(RegisterDTO registerDto, string userRole)
     {
         var user = new User();
-
-        if (userRole.ToLower() == "user")
+        
+        if (userRole.ToLower() == "customer")
         {
-            userRole = "User";
+            userRole = "Customer";
             user = new Customer
             {
                 UserName = registerDto.Username,
@@ -91,9 +91,19 @@ public class AccountController : ControllerBase
     public async Task<IActionResult> Login(LoginDTO loginDto)
     {
         var user = await _userManager.Users.FirstOrDefaultAsync(u => u.UserName == loginDto.Username.ToLower());
+       
+        if (user == null) 
+            return Unauthorized("Invalid username!");
+        
         var result =
             await _signInManager.PasswordSignInAsync(loginDto.Username, loginDto.Password, isPersistent: true,
                 lockoutOnFailure: false);
+        
+        if (!result.Succeeded)
+        {
+            return Unauthorized("Username not found and/or password incorrect");
+        }
+        
         var roles = await _userManager.GetRolesAsync(user);
         var token = _tokenService.CreateToken(user, roles);
 
