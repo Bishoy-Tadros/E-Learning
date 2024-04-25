@@ -59,15 +59,15 @@ public class AccountController : ControllerBase
             if (roleResult.Succeeded)
             {
                 await _signInManager.SignInAsync(user, isPersistent: true);
-                //var roles = await _userManager.GetRolesAsync(user);
-                //var token = _tokenService.CreateToken(user, roles);
+                var roles = await _userManager.GetRolesAsync(user);
+                var token = _tokenService.CreateToken(user, roles);
 
                 return Ok(new LoginResponseDto
                 {
                     Id = user.Id,
                     UserName = user.UserName,
                     Email = user.Email,
-                    //Token = token,
+                    Token = token,
                 }
                 );
             }
