@@ -68,8 +68,8 @@ public class ApplicationDbContext : IdentityDbContext<User>
 
             new IdentityRole
             {
-                Name = "User",
-                NormalizedName = "USER"
+                Name = "Customer",
+                NormalizedName = "CUSTOMER"
 
 
             },
