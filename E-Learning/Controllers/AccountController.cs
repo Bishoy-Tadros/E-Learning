@@ -78,6 +78,7 @@ public class AccountController : ControllerBase
                         UserName = user.UserName,
                         Email = user.Email,
                         Token = token,
+                        UserRole = roleResult.ToString()
                     }
                 );
             }
@@ -116,6 +117,7 @@ public class AccountController : ControllerBase
                     UserName = user.UserName,
                     Email = user.Email,
                     Token = token,
+                    UserRole = roles.ToString()
                 });
         }
 

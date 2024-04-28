@@ -6,4 +6,6 @@ public class CartCourse
     public Cart Cart { get; set; }
     public string CourseId { get; set; }
     public Course Course { get; set; }
+
+    public int Quantity { get; set; }
 }

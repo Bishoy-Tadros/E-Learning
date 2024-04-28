@@ -7,4 +7,6 @@ public class UserCourse
     
     public string CourseId { get; set; }
     public Course Course { get; set; }
+    
+    public int Quantity { get; set; }
 }

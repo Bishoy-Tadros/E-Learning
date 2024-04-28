@@ -21,12 +21,13 @@ public class CourseController: ControllerBase
     [HttpGet("getAllCourses")]
     public async Task<IActionResult> GetAllCourses()
     {
-        var courses = await _dbContext.Courses.Select(c => new CourseDTO
+        var courses = await _dbContext.Courses.Select(c => new ViewCourseDTO
         {
             CourseTile = c.CourseTile,
             CourseDescription = c.CourseDescription,
             CoursePrice = c.CoursePrice,
-            Category = c.Category
+            Category = c.Category,
+            CourseId = c.CourseId
         }).ToListAsync();
 
         return Ok(courses);

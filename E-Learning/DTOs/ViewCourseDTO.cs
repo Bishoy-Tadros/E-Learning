@@ -1,6 +1,6 @@
 ﻿namespace E_Learning.DTOs;
 
-public class CourseDTO
+public class ViewCourseDTO
 {
     public string CourseId { get; set; }
     public string CourseTile { get; set; }
@@ -11,5 +11,5 @@ public class CourseDTO
     
     public string Category { get; set; }
     
-    public int Quantity { get; set; }
+
 }
