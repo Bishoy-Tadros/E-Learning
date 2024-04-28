@@ -26,14 +26,14 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost("addCourse")]
-    public async Task<IActionResult> AddCourse(CourseDTO courseDto)
+    public async Task<IActionResult> AddCourse(AddCourseDTO addCourseDto)
     {
         var addedCourse = new Course
         {
-            CourseTile = courseDto.CourseTile,
-            CoursePrice = courseDto.CoursePrice,
-            CourseDescription = courseDto.CourseDescription,
-            Category = courseDto.Category
+            CourseTile = addCourseDto.CourseTile,
+            CoursePrice = addCourseDto.CoursePrice,
+            CourseDescription = addCourseDto.CourseDescription,
+            Category = addCourseDto.Category
         };
         _dbContext.Courses.Add(addedCourse);
         await _dbContext.SaveChangesAsync();

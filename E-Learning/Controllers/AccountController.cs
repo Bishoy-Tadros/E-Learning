@@ -106,6 +106,8 @@ public class AccountController : ControllerBase
         }
         
         var roles = await _userManager.GetRolesAsync(user);
+        var userType = roles.Contains("Admin") ? "Admin" : roles.Contains("Customer") ? "Customer" : "Unknown";
+
         var token = _tokenService.CreateToken(user, roles);
 
         if (result.Succeeded)
@@ -117,7 +119,7 @@ public class AccountController : ControllerBase
                     UserName = user.UserName,
                     Email = user.Email,
                     Token = token,
-                    UserRole = roles.ToString()
+                    UserRole = userType
                 });
         }
 
