@@ -34,12 +34,13 @@ public class CustomerController : ControllerBase
         {
             return NotFound();
         }
-        var courseDetails = new CourseDTO
+        var courseDetails = new ViewCourseDTO
         {
             CourseTile = course.CourseTile,
             CourseDescription = course.CourseDescription,
             Category = course.Category,
             CoursePrice = course.CoursePrice,
+            CourseId = course.CourseId
         };
         return Ok(courseDetails);
     }
@@ -80,8 +81,13 @@ public class CustomerController : ControllerBase
             {
                 CartId = cart.CartId,
                 CourseId = courseId,
-                Course = course
+                Course = course,
+                Quantity = 1 
             });
+        }
+        else
+        {
+            cartCourse.Quantity++;
         }
 
         await _dbContext.SaveChangesAsync();
@@ -114,15 +120,16 @@ public class CustomerController : ControllerBase
                 CartCourses = new List<CartCourse>()
             };
             _dbContext.Carts.Add(cart);
-            
         }
 
         var cartCoursesDto = cart.CartCourses.Select(cc => new CourseDTO
         {
+            CourseId = cc.CourseId, 
             CourseTile = cc.Course.CourseTile,
             CourseDescription = cc.Course.CourseDescription,
             CoursePrice = cc.Course.CoursePrice,
-            Category = cc.Course.Category 
+            Category = cc.Course.Category,
+            Quantity = cc.Quantity
         }).ToList();
 
         var cartDto = new
@@ -138,42 +145,165 @@ public class CustomerController : ControllerBase
     [HttpDelete("deleteFromCart/{courseId}")]
     public async Task<IActionResult> DeleteFromCart(string courseId)
     {
-        var customerId = _userManager.GetUserId(User);
+        var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (customerId == null)
         {
             return Unauthorized();
         }
-        var cart = _dbContext.Carts.Include(c => c.CartCourses).FirstOrDefault(c => c.CustomerId == customerId);
+
+        var cart = await _dbContext.Carts
+            .Include(c => c.CartCourses)
+            .FirstOrDefaultAsync(c => c.CustomerId == customerId);
+
+        if (cart == null)
+        {
+            return NotFound();
+        }
+
         var cartCourse = cart.CartCourses.FirstOrDefault(cc => cc.CourseId == courseId);
         if (cartCourse == null)
         {
             return NotFound();
         }
 
-        _dbContext.CartCourses.Remove(cartCourse);
+        if (cartCourse.Quantity > 1)
+        {
+            cartCourse.Quantity--;
+        }
+        else
+        {
+            _dbContext.CartCourses.Remove(cartCourse);
+        }
+
         await _dbContext.SaveChangesAsync();
 
-        return Ok("Course has been deleted from the cart successfully");
+        return Ok("Course quantity has been updated in the cart successfully");
     }
+
 
     [HttpPut("updateCart/{courseId}/{quantity}")]
     public async Task<IActionResult> UpdateCart(string courseId, int quantity)
     {
-        var customerId = _userManager.GetUserId(User);
+        var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (customerId == null)
         {
             return Unauthorized();
         }
-        var cart = _dbContext.Carts.Include(c => c.CartCourses).FirstOrDefault(c => c.CustomerId == customerId);
+
+        var cart = await _dbContext.Carts
+            .Include(c => c.CartCourses)
+            .FirstOrDefaultAsync(c => c.CustomerId == customerId);
+
+        if (cart == null)
+        {
+            return NotFound("Cart not found");
+        }
+
         var cartCourse = cart.CartCourses.FirstOrDefault(cc => cc.CourseId == courseId);
         if (cartCourse == null)
         {
-            return NotFound();
+            return NotFound("CartCourse not found");
         }
-        
-        _dbContext.CartCourses.Update(cartCourse);
+
+        if (quantity <= 0)
+        {
+            _dbContext.CartCourses.Remove(cartCourse);
+        }
+        else
+        {
+            cartCourse.Quantity = quantity;
+        }
+
         await _dbContext.SaveChangesAsync();
 
         return Ok("Cart has been updated successfully");
     }
+    
+    [HttpPost("purchaseCourses")]
+    public async Task<IActionResult> PurchaseCourses()
+    {
+        var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (customerId == null)
+        {
+            return Unauthorized();
+        }
+
+        var cart = await _dbContext.Carts
+            .Include(c => c.CartCourses)
+            .ThenInclude(cc => cc.Course)
+            .FirstOrDefaultAsync(c => c.CustomerId == customerId);
+
+        if (cart == null)
+        {
+            return NotFound("Cart not found");
+        }
+
+        // Add cart courses to user courses or update existing ones
+        foreach (var cartCourse in cart.CartCourses)
+        {
+            var existingUserCourse = await _dbContext.UserCourses
+                .FirstOrDefaultAsync(uc => uc.CustomerId == customerId && uc.CourseId == cartCourse.CourseId);
+
+            if (existingUserCourse != null)
+            {
+                // Update the existing record
+                existingUserCourse.Quantity += cartCourse.Quantity;
+            }
+            else
+            {
+                // Create a new record
+                var userCourse = new UserCourse
+                {
+                    CustomerId = customerId,
+                    CourseId = cartCourse.CourseId,
+                    Course = cartCourse.Course,
+                    Quantity = cartCourse.Quantity
+                };
+
+                _dbContext.UserCourses.Add(userCourse);
+            }
+        }
+
+        // Clear the cart by removing all cart courses
+        cart.CartCourses.Clear();
+
+        await _dbContext.SaveChangesAsync();
+
+        return Ok("Courses have been added to your purchased courses, and the cart has been cleared.");
+    }
+
+    [HttpGet("userCourses")]
+    public async Task<IActionResult> GetUserCourses()
+    {
+        var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (customerId == null)
+        {
+            return Unauthorized();
+        }
+
+        var userCourses = await _dbContext.UserCourses
+            .Where(uc => uc.CustomerId == customerId)
+            .Include(uc => uc.Course)
+            .ToListAsync();
+
+        if (userCourses == null || userCourses.Count == 0)
+        {
+            return NotFound("No courses found for this user.");
+        }
+
+        // Select the data you want to return
+        var courseData = userCourses.Select(uc => new CourseDTO
+        {
+            CourseId = uc.CourseId,
+            CourseTile = uc.Course.CourseTile,
+            CourseDescription = uc.Course.CourseDescription,
+            CoursePrice = uc.Course.CoursePrice,
+            Category = uc.Course.Category,
+            Quantity = uc.Quantity
+        });
+
+        return Ok(courseData);
+    }
+
+
 }
