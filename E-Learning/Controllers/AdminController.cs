@@ -40,21 +40,7 @@ public class AdminController : ControllerBase
         return Ok("Course has been added successfully");
     }
 
-    [HttpGet("viewCourse/{courseId}")]
-    public async Task<IActionResult> ViewCourse(string courseId)
-    {
-        var course = await _dbContext.Courses.FindAsync(courseId);
-
-        var courseDetails = new CourseDTO
-        {
-            CourseId = course.CourseId,
-            CourseTile = course.CourseTile,
-            CourseDescription = course.CourseDescription,
-            Category = course.Category,
-            CoursePrice = course.CoursePrice,
-        };
-        return Ok(courseDetails);
-    }
+    
 
     [HttpPut("editCourse/{courseId}")]
     public async Task<IActionResult> EditCourse(string courseId, CourseDTO courseDto)

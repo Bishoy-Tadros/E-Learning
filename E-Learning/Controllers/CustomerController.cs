@@ -25,25 +25,7 @@ public class CustomerController : ControllerBase
         _signInManager = signInManager;
         _dbContext = applicationDbContext;
     }
-
-    [HttpGet("viewCourse/{courseId}")]
-    public async Task<IActionResult> ViewCourse(string courseId)
-    {
-        var course = await _dbContext.Courses.FindAsync(courseId);
-        if (course == null)
-        {
-            return NotFound();
-        }
-        var courseDetails = new ViewCourseDTO
-        {
-            CourseTile = course.CourseTile,
-            CourseDescription = course.CourseDescription,
-            Category = course.Category,
-            CoursePrice = course.CoursePrice,
-            CourseId = course.CourseId
-        };
-        return Ok(courseDetails);
-    }
+    
 
     [HttpPost("addToCart/{courseId}")]
     public async Task<IActionResult> AddToCart(string courseId)

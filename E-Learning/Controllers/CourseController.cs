@@ -32,5 +32,22 @@ public class CourseController: ControllerBase
 
         return Ok(courses);
     }
+    
+    
+    [HttpGet("viewCourse/{courseId}")]
+    public async Task<IActionResult> ViewCourse(string courseId)
+    {
+        var course = await _dbContext.Courses.FindAsync(courseId);
+
+        var courseDetails = new CourseDTO
+        {
+            CourseId = course.CourseId,
+            CourseTile = course.CourseTile,
+            CourseDescription = course.CourseDescription,
+            Category = course.Category,
+            CoursePrice = course.CoursePrice,
+        };
+        return Ok(courseDetails);
+    }
 
 }
