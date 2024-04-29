@@ -201,8 +201,8 @@ public class CustomerController : ControllerBase
         return Ok("Cart has been updated successfully");
     }
     
-    [HttpPost("purchaseCourses")]
-    public async Task<IActionResult> PurchaseCourses()
+    [HttpPost("CheckoutCourses")]
+    public async Task<IActionResult> CheckoutCourses()
     {
         var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (customerId == null)
