@@ -47,6 +47,7 @@ public class AdminController : ControllerBase
 
         var courseDetails = new CourseDTO
         {
+            CourseId = course.CourseId,
             CourseTile = course.CourseTile,
             CourseDescription = course.CourseDescription,
             Category = course.Category,
