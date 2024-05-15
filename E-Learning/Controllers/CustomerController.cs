@@ -148,15 +148,8 @@ public class CustomerController : ControllerBase
             return NotFound();
         }
 
-        if (cartCourse.Quantity > 1)
-        {
-            cartCourse.Quantity--;
-        }
-        else
-        {
-            _dbContext.CartCourses.Remove(cartCourse);
-        }
-
+        _dbContext.CartCourses.Remove(cartCourse);
+        
         await _dbContext.SaveChangesAsync();
 
         return Ok("Course quantity has been updated in the cart successfully");

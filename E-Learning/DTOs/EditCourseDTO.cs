@@ -2,7 +2,6 @@
 
 public class EditCourseDTO
 {
-    public string CourseId { get; set; }
     public string CourseTile { get; set; }
     
     public string CourseDescription { get; set; }
