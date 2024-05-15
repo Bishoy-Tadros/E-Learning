@@ -220,7 +220,6 @@ public class CustomerController : ControllerBase
             return NotFound("Cart not found");
         }
 
-        // Add cart courses to user courses or update existing ones
         foreach (var cartCourse in cart.CartCourses)
         {
             var existingUserCourse = await _dbContext.UserCourses
@@ -228,12 +227,10 @@ public class CustomerController : ControllerBase
 
             if (existingUserCourse != null)
             {
-                // Update the existing record
                 existingUserCourse.Quantity += cartCourse.Quantity;
             }
             else
             {
-                // Create a new record
                 var userCourse = new UserCourse
                 {
                     CustomerId = customerId,
@@ -246,7 +243,6 @@ public class CustomerController : ControllerBase
             }
         }
 
-        // Clear the cart by removing all cart courses
         cart.CartCourses.Clear();
 
         await _dbContext.SaveChangesAsync();
