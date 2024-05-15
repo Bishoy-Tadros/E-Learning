@@ -152,7 +152,7 @@ public class CustomerController : ControllerBase
         
         await _dbContext.SaveChangesAsync();
 
-        return Ok("Course quantity has been updated in the cart successfully");
+        return Ok("Course has been deleted from the cart successfully");
     }
 
 
@@ -274,6 +274,47 @@ public class CustomerController : ControllerBase
 
         return Ok(courseData);
     }
+    
+    [HttpGet("viewCourseCart/{courseId}")]
+    public async Task<IActionResult> ViewCourseCart(string courseId)
+    {
+        var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (customerId == null)
+        {
+            return Unauthorized();
+        }
+    
+        var cart = await _dbContext.Carts
+            .Include(c => c.CartCourses)
+            .ThenInclude(cc => cc.Course)
+            .FirstOrDefaultAsync(c => c.CustomerId == customerId);
+
+        if (cart == null)
+        {
+            return NotFound(); 
+        }
+
+        var courseDetail = cart.CartCourses
+            .Where(cc => cc.CourseId == courseId)
+            .Select(cc => new CourseDTO
+            {
+                CourseId = cc.CourseId, 
+                CourseTile = cc.Course.CourseTile,
+                CourseDescription = cc.Course.CourseDescription,
+                CoursePrice = cc.Course.CoursePrice,
+                Category = cc.Course.Category,
+                Quantity = cc.Quantity
+            }).FirstOrDefault();
+    
+        if (courseDetail == null)
+        {
+            return NotFound(); 
+        }
+
+        return Ok(courseDetail);
+    }
+
+
 
 
 }
