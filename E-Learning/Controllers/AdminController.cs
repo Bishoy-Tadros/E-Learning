@@ -43,7 +43,7 @@ public class AdminController : ControllerBase
     
 
     [HttpPut("editCourse/{courseId}")]
-    public async Task<IActionResult> EditCourse(string courseId, CourseDTO courseDto)
+    public async Task<IActionResult> EditCourse(string courseId, EditCourseDTO editCourseDto)
     {
         var existingCourse = await _dbContext.Courses.FindAsync(courseId);
         if (existingCourse == null)
@@ -51,10 +51,10 @@ public class AdminController : ControllerBase
             return NotFound();
         }
 
-        existingCourse.CourseTile = courseDto.CourseTile;
-        existingCourse.CourseDescription = courseDto.CourseDescription;
-        existingCourse.CoursePrice = courseDto.CoursePrice;
-        existingCourse.Category = courseDto.Category;
+        existingCourse.CourseTile = editCourseDto.CourseTile;
+        existingCourse.CourseDescription = editCourseDto.CourseDescription;
+        existingCourse.CoursePrice = editCourseDto.CoursePrice;
+        existingCourse.Category = editCourseDto.Category;
 
         _dbContext.Courses.Update(existingCourse);
         await _dbContext.SaveChangesAsync();

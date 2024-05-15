@@ -269,7 +269,6 @@ public class CustomerController : ControllerBase
             return NotFound("No courses found for this user.");
         }
 
-        // Select the data you want to return
         var courseData = userCourses.Select(uc => new CourseDTO
         {
             CourseId = uc.CourseId,
