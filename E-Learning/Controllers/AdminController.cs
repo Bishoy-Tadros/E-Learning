@@ -13,15 +13,11 @@ namespace E_Learning.Controllers;
 [ApiController]
 public class AdminController : ControllerBase
 {
-    private readonly UserManager<User> _userManager;
-    private readonly SignInManager<User> _signInManager;
+
     private readonly ApplicationDbContext _dbContext;
 
-    public AdminController(UserManager<User> userManager, SignInManager<User> signInManager,
-        ApplicationDbContext applicationDbContext)
+    public AdminController(ApplicationDbContext applicationDbContext)
     {
-        _userManager = userManager;
-        _signInManager = signInManager;
         _dbContext = applicationDbContext;
     }
 
@@ -45,7 +41,7 @@ public class AdminController : ControllerBase
     [HttpPut("editCourse/{courseId}")]
     public async Task<IActionResult> EditCourse(string courseId, EditCourseDTO editCourseDto)
     {
-        var existingCourse = await _dbContext.Courses.FindAsync(courseId);
+        var existingCourse = await _dbContext.Courses.FirstOrDefaultAsync(c => c.CourseId == courseId);
         if (existingCourse == null)
         {
             return NotFound();
@@ -65,7 +61,7 @@ public class AdminController : ControllerBase
     [HttpDelete("deleteCourse/{courseId}")]
     public async Task<IActionResult> DeleteCourse(string courseId)
     {
-        var course = await _dbContext.Courses.FindAsync(courseId);
+        var course = await _dbContext.Courses.FirstOrDefaultAsync(c => c.CourseId == courseId);
         if (course == null)
         {
             return NotFound();

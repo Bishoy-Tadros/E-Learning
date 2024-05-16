@@ -14,15 +14,12 @@ namespace E_Learning.Controllers;
 [ApiController]
 public class CustomerController : ControllerBase
 {
-    private readonly UserManager<User> _userManager;
-    private readonly SignInManager<User> _signInManager;
+
     private readonly ApplicationDbContext _dbContext;
 
-    public CustomerController(UserManager<User> userManager, SignInManager<User> signInManager,
-        ApplicationDbContext applicationDbContext)
+    public CustomerController(ApplicationDbContext applicationDbContext)
     {
-        _userManager = userManager;
-        _signInManager = signInManager;
+
         _dbContext = applicationDbContext;
     }
     
@@ -81,7 +78,7 @@ public class CustomerController : ControllerBase
 
 
     [HttpGet("viewCart")]
-    public IActionResult ViewCart()
+    public async Task<IActionResult> ViewCart()
     {
         var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (customerId == null)
@@ -89,10 +86,10 @@ public class CustomerController : ControllerBase
             return Unauthorized();
         }
 
-        var cart = _dbContext.Carts
+        var cart = await _dbContext.Carts
             .Include(c => c.CartCourses)
             .ThenInclude(cc => cc.Course)
-            .FirstOrDefault(c => c.CustomerId == customerId);
+            .FirstOrDefaultAsync(c => c.CustomerId == customerId);
 
         if (cart == null)
         {
@@ -101,7 +98,9 @@ public class CustomerController : ControllerBase
                 CustomerId = customerId,
                 CartCourses = new List<CartCourse>()
             };
+            
             _dbContext.Carts.Add(cart);
+            await _dbContext.SaveChangesAsync();
         }
 
         var cartCoursesDto = cart.CartCourses.Select(cc => new CourseDTO
@@ -122,6 +121,7 @@ public class CustomerController : ControllerBase
 
         return Ok(cartDto);
     }
+
 
 
     [HttpDelete("deleteFromCart/{courseId}")]

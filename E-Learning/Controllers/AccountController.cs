@@ -13,15 +13,13 @@ public class AccountController : ControllerBase
 {
     private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
-    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ITokenService _tokenService;
 
     public AccountController(UserManager<User> userManager, SignInManager<User> signInManager,
-        IHttpContextAccessor httpContextAccessor, ITokenService tokenService)
+         ITokenService tokenService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
-        _httpContextAccessor = httpContextAccessor;
         _tokenService = tokenService;
     }
 
@@ -68,7 +66,7 @@ public class AccountController : ControllerBase
 
             if (roleResult.Succeeded)
             {
-                await _signInManager.SignInAsync(user, isPersistent: true);
+                await _signInManager.CheckPasswordSignInAsync(user, registerDto.Password, false);
                 var roles = await _userManager.GetRolesAsync(user);
                 var token = _tokenService.CreateToken(user, roles);
 
@@ -91,14 +89,13 @@ public class AccountController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginDTO loginDto)
     {
-        var user = await _userManager.Users.FirstOrDefaultAsync(u => u.UserName == loginDto.Username.ToLower());
+        var user = await _userManager.Users.FirstOrDefaultAsync(u => u.UserName == loginDto.Username);
        
         if (user == null) 
             return Unauthorized("Invalid username!");
         
-        var result =
-            await _signInManager.PasswordSignInAsync(loginDto.Username, loginDto.Password, isPersistent: true,
-                lockoutOnFailure: false);
+        var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
+
         
         if (!result.Succeeded)
         {
@@ -106,7 +103,6 @@ public class AccountController : ControllerBase
         }
         
         var roles = await _userManager.GetRolesAsync(user);
-        var userType = roles.Contains("Admin") ? "Admin" : roles.Contains("Customer") ? "Customer" : "Unknown";
 
         var token = _tokenService.CreateToken(user, roles);
 
@@ -119,25 +115,11 @@ public class AccountController : ControllerBase
                     UserName = user.UserName,
                     Email = user.Email,
                     Token = token,
-                    UserRole = userType
+                    UserRole = roles[0]
                 });
         }
 
         return Unauthorized();
     }
-
-    [HttpPost("logout")]
-    public async Task<IActionResult> Logout()
-    {
-        // Retrieve the token from the request (you can use HttpContext or other methods)
-        var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-
-        // Invalidate the token (e.g., remove it from the client-side)
-        // You can also revoke the token on the server-side if needed
-
-        // Perform any other cleanup (e.g., sign out the user)
-        await _signInManager.SignOutAsync();
-
-        return Ok("Logged out successfully.");
-    }
+    
 }
